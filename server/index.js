@@ -6,7 +6,7 @@ const helmet = require('helmet');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const auth = require('./middleware/auth');  // Add this import
+const auth = require('./middleware/auth');
 
 const connectDB = async () => {
   try {
@@ -21,18 +21,21 @@ const connectDB = async () => {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middleware - CORRECT ORDER
 app.use(helmet());
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'] }));
 app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Basic route
 app.get('/api', (req, res) => {
   res.json({ message: 'TrackStack API Running! 🚀' });
 });
 
-// Auth routes - ADD THESE 2 LINES
+// Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/projects', require('./routes/projects'));
+
 app.get('/api/protected', auth, (req, res) => {
   res.json({ message: 'Protected route accessed!', user: req.user?.email || 'No user' });
 });
@@ -40,7 +43,7 @@ app.get('/api/protected', auth, (req, res) => {
 // DB Connection
 connectDB();
 
-// Error handling middleware (ADD THIS - before app.listen)
+// Error handling
 app.use((err, req, res, next) => {
   console.error('Server Error:', err.stack);
   res.status(500).json({ error: 'Something went wrong!', details: err.message });
