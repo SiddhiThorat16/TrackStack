@@ -10,7 +10,6 @@ const Sidebar = () => {
   const menuItems = [
     { icon: "📊", label: "Dashboard", path: "/dashboard" },
     { icon: "📂", label: "Projects", path: "/projects" },
-    { icon: "🐛", label: "Tickets", path: "/tickets" },
     { icon: "👥", label: "Team", path: "/team" },
     { icon: "📈", label: "Analytics", path: "/analytics" },
   ];
