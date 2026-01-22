@@ -32,9 +32,10 @@ app.get('/api', (req, res) => {
   res.json({ message: 'TrackStack API Running! 🚀' });
 });
 
-// Routes
+// Routes - TICKETS ADDED
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
+app.use('/api/tickets', require('./routes/tickets'));  // ✅ Day 4 Tickets
 
 app.get('/api/protected', auth, (req, res) => {
   res.json({ message: 'Protected route accessed!', user: req.user?.email || 'No user' });
