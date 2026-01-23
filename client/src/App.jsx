@@ -13,6 +13,7 @@ import Projects from "./pages/Projects";
 import Dashboard from "./pages/Dashboard";
 import Sidebar from "./components/Sidebar";
 import ProjectDetail from "./pages/ProjectDetail";
+import Team from "./pages/Team";
 
 const Layout = ({ children }) => (
   <div className="flex">
@@ -78,6 +79,16 @@ function AppContent() {
                 <ProtectedRoute>
                   <Layout>
                     <ProjectDetail />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Team />
                   </Layout>
                 </ProtectedRoute>
               }
