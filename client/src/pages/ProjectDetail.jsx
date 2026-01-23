@@ -17,6 +17,11 @@ const ProjectDetail = () => {
   });
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  
+  // Comment section states
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
 
   useEffect(() => {
     fetchProject();
@@ -52,6 +57,47 @@ const ProjectDetail = () => {
     } catch (err) {
       console.error("Tickets fetch error:", err);
       setLoading(false);
+    }
+  };
+
+  // Comment functions
+  const loadTicketComments = async (ticketId) => {
+    try {
+      // If clicking the same ticket, close comments
+      if (selectedTicket === ticketId) {
+        setSelectedTicket(null);
+        setComments([]);
+        return;
+      }
+      
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(`http://localhost:5000/api/comments/ticket/${ticketId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setComments(data);
+      setSelectedTicket(ticketId);
+    } catch (err) {
+      console.error('Comments error:', err);
+    }
+  };
+
+  const addComment = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim() || !selectedTicket) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.post('http://localhost:5000/api/comments', {
+        ticketId: selectedTicket,
+        text: commentText
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setComments(prev => [data, ...prev]);
+      setCommentText('');
+    } catch (err) {
+      console.error('Add comment error:', err);
     }
   };
 
@@ -126,12 +172,18 @@ const ProjectDetail = () => {
             t._id === draggableId ? { ...t, status: newStatus } : t,
           ),
         );
+        
+        // If the moved ticket has comments open, close them
+        if (selectedTicket === draggableId) {
+          setSelectedTicket(null);
+          setComments([]);
+        }
       } catch (err) {
         console.error("Drag update failed:", err);
         fetchTickets(); // Revert on error
       }
     },
-    [tickets, projectId],
+    [tickets, projectId, selectedTicket],
   );
 
   if (loading) {
@@ -323,11 +375,12 @@ const ProjectDetail = () => {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`p-6 rounded-3xl shadow-xl transition-all duration-300 cursor-grab active:cursor-grabbing ${
+                              className={`p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer ${
                                 snapshot.isDragging
                                   ? "shadow-2xl border-2 border-blue-300 bg-white/80 scale-105 z-10"
-                                  : "hover:shadow-2xl hover:-translate-y-1 hover:border-blue-100"
-                              }`}
+                                  : "hover:-translate-y-1 hover:border-blue-100"
+                              } ${selectedTicket === ticket._id ? 'border-2 border-indigo-300' : ''}`}
+                              onClick={() => loadTicketComments(ticket._id)}
                             >
                               <div className="flex items-start justify-between mb-4">
                                 <span
@@ -369,6 +422,55 @@ const ProjectDetail = () => {
                                   by {ticket.createdBy?.name}
                                 </span>
                               </div>
+
+                              {/* ✅ COMMENTS SECTION */}
+                              {selectedTicket === ticket._id && (
+                                <div className="mt-6 pt-6 border-t border-gray-200 space-y-4">
+                                  {/* Comment List */}
+                                  <div className="max-h-48 overflow-y-auto space-y-3 pr-2">
+                                    {comments.map(comment => (
+                                      <div key={comment._id} className="flex gap-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl">
+                                        <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                          {comment.userId.name?.[0] || '?'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-semibold text-gray-900 text-sm truncate">{comment.userId.name}</span>
+                                            <span className="text-xs text-gray-500">
+                                              {new Date(comment.createdAt).toLocaleTimeString()}
+                                            </span>
+                                          </div>
+                                          <p className="text-sm text-gray-800 leading-relaxed">{comment.text}</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  
+                                  {/* Add Comment Form */}
+                                  <form onSubmit={addComment} className="flex gap-2 p-2 bg-white rounded-2xl border-2 border-gray-100 focus-within:border-indigo-300 transition-all">
+                                    <textarea
+                                      value={commentText}
+                                      onChange={(e) => setCommentText(e.target.value)}
+                                      placeholder="Write a comment..."
+                                      className="flex-1 p-3 text-sm border-none rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none max-h-24"
+                                      rows="1"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                          e.preventDefault();
+                                          addComment(e);
+                                        }
+                                      }}
+                                    />
+                                    <button
+                                      type="submit"
+                                      disabled={!commentText.trim()}
+                                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold rounded-xl text-sm shadow-lg hover:shadow-xl transition-all whitespace-nowrap disabled:cursor-not-allowed"
+                                    >
+                                      Post
+                                    </button>
+                                  </form>
+                                </div>
+                              )}
                             </div>
                           )}
                         </Draggable>

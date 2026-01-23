@@ -42,10 +42,8 @@ function AppContent() {
   return (
     <Router>
       {" "}
-      {/* ✅ ROUTER FIRST */}
       <AuthProvider>
         {" "}
-        {/* ✅ AuthProvider INSIDE Router */}
         <div className="font-sans antialiased">
           <Routes>
             {/* Public Routes */}
