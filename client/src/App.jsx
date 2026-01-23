@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Sidebar from "./components/Sidebar";
 import ProjectDetail from "./pages/ProjectDetail";
 import Team from "./pages/Team";
+import Analytics from "./pages/Analytics";
 
 const Layout = ({ children }) => (
   <div className="flex">
@@ -89,6 +90,16 @@ function AppContent() {
                 <ProtectedRoute>
                   <Layout>
                     <Team />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Analytics />
                   </Layout>
                 </ProtectedRoute>
               }

@@ -121,12 +121,6 @@ exports.assignTicket = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
 // getProjectTickets
 exports.getProjectTickets = async (req, res) => {
   try {
