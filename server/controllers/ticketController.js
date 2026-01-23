@@ -120,3 +120,40 @@ exports.assignTicket = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
+
+
+
+
+// getProjectTickets
+exports.getProjectTickets = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { status, priority, assignee, search } = req.query;
+    
+    // Build filter object
+    let filter = { projectId };
+    
+    // Add optional filters
+    if (status) filter.status = status;
+    if (priority) filter.priority = priority;
+    if (assignee) filter.assignee = assignee;
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const tickets = await Ticket.find(filter)
+      .populate('assignee', 'name email')
+      .populate('createdBy', 'name')
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json(tickets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
