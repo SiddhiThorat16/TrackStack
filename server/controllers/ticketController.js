@@ -151,3 +151,50 @@ exports.getProjectTickets = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+exports.updateTicket = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ticket = await Ticket.findById(id);
+    
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+    
+    // Authorization: creator or assignee can edit
+    if (ticket.createdBy.toString() !== req.user.id && ticket.assignee?.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    const updates = req.body;
+    const updatedTicket = await Ticket.findByIdAndUpdate(id, updates, { new: true })
+      .populate('assignee', 'name email')
+      .populate('createdBy', 'name');
+    
+    res.status(200).json(updatedTicket);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteTicket = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ticket = await Ticket.findById(id);
+    
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+    
+    // Authorization: only creator can delete
+    if (ticket.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    await Ticket.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Ticket deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

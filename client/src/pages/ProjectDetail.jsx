@@ -5,6 +5,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import TicketModal from "../components/TicketModal";
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
@@ -22,6 +23,9 @@ const ProjectDetail = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
+
+  const [editingTicket, setEditingTicket] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     fetchProject();
@@ -120,6 +124,18 @@ const ProjectDetail = () => {
       fetchTickets();
     } catch (err) {
       console.error("Create ticket error:", err);
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/api/tickets/${ticketId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchTickets(); // Refresh list
+    } catch (err) {
+      console.error('Delete failed:', err);
     }
   };
 
@@ -471,6 +487,34 @@ const ProjectDetail = () => {
                                   </form>
                                 </div>
                               )}
+
+                              {/* ADD ACTION BUTTONS - Bottom right */}
+                              <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Prevent opening comments
+                                    setEditingTicket(ticket);
+                                    setShowEditModal(true);
+                                  }}
+                                  className="p-2 hover:bg-indigo-100 rounded-xl text-indigo-600 hover:text-indigo-700 transition-colors"
+                                  title="Edit"
+                                >
+                                  ✏️
+                                </button>
+                                
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Delete "${ticket.title}"?`)) {
+                                      handleDeleteTicket(ticket._id);
+                                    }
+                                  }}
+                                  className="p-2 hover:bg-red-100 rounded-xl text-red-600 hover:text-red-700 transition-colors"
+                                  title="Delete"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
                             </div>
                           )}
                         </Draggable>
@@ -484,6 +528,13 @@ const ProjectDetail = () => {
           })}
         </div>
       </DragDropContext>
+
+      <TicketModal 
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        ticket={editingTicket}
+        onSave={fetchTickets}
+      />
     </div>
   );
 };
