@@ -6,6 +6,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import TicketModal from "../components/TicketModal";
+import { API_BASE_URL } from '../config';
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
